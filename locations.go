@@ -21,7 +21,8 @@ type accessToken struct {
 	TokenType    string `json:"token_type"`
 	ExpiresIn    int    `json:"expires_in"`
 	RefreshToken string `json:"refresh_token"`
-	UserID       string `json:"user_id"`
+	UserID       int    `json:"user_id"`
+	Error        string `json:"error"`
 }
 
 func main() {
@@ -92,11 +93,12 @@ func getAccessToken(code string) (accessToken, error) {
 		clientID,
 		clientSecret)
 
-	resp, err := http.Get(url)
+	resp, err := http.Post(url, "", nil)
 	if err != nil {
 		return accessToken{}, err
 	}
 
+	fmt.Println(resp.StatusCode)
 	defer resp.Body.Close()
 	token := accessToken{}
 
