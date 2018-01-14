@@ -37,6 +37,9 @@ func main() {
 
 	r := mux.NewRouter()
 
+	// This will serve files under http://localhost:8000/static/<filename>
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+
 	r.HandleFunc("/api/hello", handleHello).Methods("GET")
 	r.HandleFunc("/api/authorize", handleAuthorize).Methods("GET")
 	r.HandleFunc("/api/authcodeexchange", handleAuthCodeExchange).Methods("GET")
@@ -172,7 +175,7 @@ func handleSync(w http.ResponseWriter, req *http.Request) {
 	fmt.Println(usr, uss)
 
 	i := 0
-	for uss.SyncedThroughDate < time.Now().AddDate(0, 0, 7).Format("20060102") {
+	for uss.SyncedThroughDate < time.Now().AddDate(0, 0, -7).Format("20060102") {
 		i++
 		if i > 60 {
 			http.Error(w, "synced to much", http.StatusInternalServerError)
