@@ -3,9 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -16,31 +19,32 @@ var (
 
 const clientID = "1YDQsQs35jh33XfAPL8T0KW5fz7jizOZ"
 
-type accessToken struct {
-	AccessToken  string `json:"access_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    int    `json:"expires_in"`
-	RefreshToken string `json:"refresh_token"`
-	UserID       int    `json:"user_id"`
-	Error        string `json:"error"`
-}
-
 func main() {
 	clientSecret = os.Getenv("MOVESSECRET")
 	if clientSecret == "" {
 		log.Fatal("$MOVESSECRET must be set")
 	}
 
+	var port = os.Getenv("PORT")
+	if port == "" {
+		port = "8632"
+	}
+
+	err := migrate()
+	if err != nil {
+		log.Fatalf("migration failed, %v", err)
+	}
+
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/hello", handleHello).
-		Methods("GET")
-	r.HandleFunc("/api/authorize", handleAuthorize).
-		Methods("GET")
-	r.HandleFunc("/api/authcodeexchange", handleAuthCodeExchange).
-		Methods("GET")
+	r.HandleFunc("/api/hello", handleHello).Methods("GET")
+	r.HandleFunc("/api/authorize", handleAuthorize).Methods("GET")
+	r.HandleFunc("/api/authcodeexchange", handleAuthCodeExchange).Methods("GET")
+	r.HandleFunc("/api/users/{id}/counts", handleCounts).Methods("GET")
+	r.HandleFunc("/api/users/{id}/sync", handleSync).Methods("GET")
 
-	err := http.ListenAndServe(":8632", r)
+	fmt.Println("Starting HTTP server")
+	err = http.ListenAndServe(":"+port, r)
 	if err != nil {
 		log.Fatalf("Cannot listen and serve, %v", err)
 	} else {
@@ -68,22 +72,30 @@ func handleAuthCodeExchange(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "code is a required querystring parameter", http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprint(w, code)
+	fmt.Println("auth code", code)
 
 	token, err := getAccessToken(code)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println(err)
 		return
 	}
+	fmt.Println("access token", token)
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	err = json.NewEncoder(w).Encode(token)
+	firstDate, err := getFirstDate(token.AccessToken)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println(err)
 		return
 	}
+	fmt.Println("first date", firstDate)
 
-	w.WriteHeader(http.StatusOK)
+	err = createUser(token, firstDate)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println(err)
+		return
+	}
 }
 
 func getAccessToken(code string) (accessToken, error) {
@@ -98,16 +110,180 @@ func getAccessToken(code string) (accessToken, error) {
 		return accessToken{}, err
 	}
 
-	fmt.Println(resp.StatusCode)
 	defer resp.Body.Close()
 	token := accessToken{}
-
 	err = json.NewDecoder(resp.Body).Decode(&token)
 	if err != nil {
 		return accessToken{}, err
 	}
 
-	fmt.Println(token)
-
 	return token, nil
+}
+
+func getFirstDate(accessToken string) (string, error) {
+	url := fmt.Sprintf(
+		"https://api.moves-app.com/api/1.1/user/profile?access_token=%v",
+		accessToken)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Println("profile status", resp.StatusCode)
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var dat map[string]interface{}
+
+	err = json.Unmarshal(body, &dat)
+	if err != nil {
+		return "", err
+	}
+
+	profile := dat["profile"].(map[string]interface{})
+	firstDate := profile["firstDate"].(string)
+
+	return firstDate, nil
+}
+
+func handleSync(w http.ResponseWriter, req *http.Request) {
+	parmUserID := mux.Vars(req)["id"]
+	if parmUserID == "" {
+		http.Error(w, "user id is required", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.Atoi(parmUserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	usr, uss, err := loadUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Println(usr, uss)
+
+	i := 0
+	for uss.SyncedThroughDate < time.Now().AddDate(0, 0, 7).Format("20060102") {
+		i++
+		if i > 60 {
+			http.Error(w, "synced to much", http.StatusInternalServerError)
+			return
+		}
+
+		ds, err := getDailyStoryline(usr.AccessToken, uss.SyncedThroughDate)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Println("DS", ds)
+		bcs := extractBreadcrumbs(ds)
+		fmt.Println("BC", len(bcs))
+
+		err = saveBreadcrumbs(usr.UserID, bcs)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		syncDt, err := time.Parse("20060102", uss.SyncedThroughDate)
+		syncDt = syncDt.AddDate(0, 0, 1)
+		uss.SyncedThroughDate = syncDt.Format("20060102")
+		fmt.Println("SD", uss.SyncedThroughDate)
+
+		err = saveUserSyncedThroughDate(usr.UserID, uss.SyncedThroughDate)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = json.NewEncoder(w).Encode(uss)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to serialize response: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
+func handleCounts(w http.ResponseWriter, req *http.Request) {
+	parmUserID := mux.Vars(req)["id"]
+	if parmUserID == "" {
+		http.Error(w, "user id is required", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.Atoi(parmUserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	ccs, err := loadCounts(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = json.NewEncoder(w).Encode(ccs)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to serialize response: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
+func getDailyStoryline(bearerToken string, date string) (dailyStoryline, error) {
+	url := fmt.Sprintf(
+		"https://api.moves-app.com/api/1.1/user/storyline/daily/%v?trackPoints=true&access_token=%v",
+		date,
+		bearerToken)
+
+	fmt.Println(url)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return dailyStoryline{}, err
+	}
+
+	fmt.Println(resp.StatusCode)
+
+	defer resp.Body.Close()
+	storylines := []dailyStoryline{}
+	err = json.NewDecoder(resp.Body).Decode(&storylines)
+	if err != nil {
+		return dailyStoryline{}, err
+	}
+
+	return storylines[0], nil
+}
+
+func extractBreadcrumbs(ds dailyStoryline) []breadcrumb {
+	breadcrumbs := []breadcrumb{}
+
+	for _, segment := range ds.Segments {
+		for _, activity := range segment.Activities {
+			for _, trackPoint := range activity.TrackPoints {
+				bc := breadcrumb{
+					Coordinate: coordinate{
+						Lat: trackPoint.Lat,
+						Lon: trackPoint.Lon,
+					},
+					Time: trackPoint.Time,
+				}
+				breadcrumbs = append(breadcrumbs, bc)
+			}
+		}
+	}
+
+	return breadcrumbs
 }
