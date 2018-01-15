@@ -16,12 +16,13 @@
 
 	 	function initMap() {
 	 		console.log('initMap');
-	        
-	        var home = {lat: 29.4855158, lng: -98.4567478};
+			 
+	        var home = {lat: 29.576679, lng: -98.450644};
 
 	        map = new google.maps.Map(document.getElementById('map'), {
-	          zoom: 12,
-	          center: home,
+	          	zoom: 12,
+			  	center: home,
+			  	styles: []
 			});
 
 			console.log('now you see me');
@@ -65,7 +66,7 @@
 							'rgba(191, 0, 31, 1)',
 							'rgba(255, 0, 0, 1)'
 						],
-						maxIntensity: 5,
+						maxIntensity: 100,
 						opacity: 1,
 						radius: 5
 					});
