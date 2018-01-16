@@ -9,80 +9,8 @@
 	</head>
  	<body>
     	<div id="map""></div>
-	<script type="text/javascript" src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-	<script type="text/javascript" async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD7RdD2-FtODOaLL9c6lAa18sx4fmXbPtY&callback=initMap&libraries=visualization"></script>
-    <script>
-    	var map;
-
-	 	function initMap() {
-	 		console.log('initMap');
-			 
-	        var home = {lat: 29.576679, lng: -98.450644};
-
-	        map = new google.maps.Map(document.getElementById('map'), {
-	          	zoom: 12,
-			  	center: home,
-			  	styles: []
-			});
-
-			console.log('now you see me');
-	    }
-
-		function heatUp() {
-			console.log('heatUp');
-
-			$.ajax({
-			        url: 'http://localhost:8632/api/users/56200834001288605/counts'
-			    }).done(function (data, textStatus, jqXHR) {
-			    	console.log('loaded data');
-
-			    	var heatMapData = [];
-			    	data.forEach(function(cc) {
-			    		heatMapData.push(
-			    			{
-			    				location: new google.maps.LatLng(
-			    					cc.Coordinate.Lat,
-			    					cc.Coordinate.Lon),
-			    				weight: cc.Count	
-			    			}
-		    			);
-		    		});
-
-					var heatmap = new google.maps.visualization.HeatmapLayer({
-						data: heatMapData,
-						gradient: [
-							'rgba(0, 255, 255, 0)',
-							'rgba(0, 255, 255, 1)',
-							'rgba(0, 191, 255, 1)',
-							'rgba(0, 127, 255, 1)',
-							'rgba(0, 63, 255, 1)',
-							'rgba(0, 0, 255, 1)',
-							'rgba(0, 0, 223, 1)',
-							'rgba(0, 0, 191, 1)',
-							'rgba(0, 0, 159, 1)',
-							'rgba(0, 0, 127, 1)',
-							'rgba(63, 0, 91, 1)',
-							'rgba(127, 0, 63, 1)',
-							'rgba(191, 0, 31, 1)',
-							'rgba(255, 0, 0, 1)'
-						],
-						maxIntensity: 100,
-						opacity: 1,
-						radius: 5
-					});
-					heatmap.setMap(map);        
-
-					console.log('it\'s getting hot in here');
-			    }).fail(function (jqXHR, textStatus, errorThrown) {
-			        alert('failed to load data');
-			    });
-			
-			console.log('whoa');
-		}
-
-		$(document).ready(function () {
-			heatUp();
-		});
-	</script>
+		<script type="text/javascript" src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+		<script type="text/javascript" src="locations.js"></script>
+		<script type="text/javascript" async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD7RdD2-FtODOaLL9c6lAa18sx4fmXbPtY&callback=initMap&libraries=visualization"></script>
 	</body>
 </html>
