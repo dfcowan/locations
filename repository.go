@@ -19,7 +19,7 @@ var (
 func migrate() error {
 	fmt.Println("Migrating database")
 
-	connStr = os.Getenv("CONNSTRING")
+	connStr = os.Getenv("DATABASE_URL")
 	if connStr == "" {
 		connStr = "postgres://locations:locations@localhost/postgres?sslmode=disable"
 	}
