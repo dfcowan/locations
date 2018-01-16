@@ -231,7 +231,7 @@ function heatUp() {
     var userId = getQuerystringParameterValue("user");
     
     $.ajax({
-        url: 'http://localhost:8632/api/users/' + userId + '/counts'
+        url: '/api/users/' + userId + '/counts'
     }).done(function (data, textStatus, jqXHR) {
         console.log('loaded data');
         
