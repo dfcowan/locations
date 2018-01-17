@@ -11,6 +11,7 @@ function getQuerystringParameterValue(name, url) {
 }
 
 var map;
+var heatmap;
 
 function initMap() {
     console.log('initMap');
@@ -20,206 +21,7 @@ function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         zoom: 12,
         center: home,
-        styles: [
-            {
-                "featureType": "poi",
-                "elementType": "all",
-                "stylers": [
-                    {
-                        "hue": "#000000"
-                    },
-                    {
-                        "saturation": -100
-                    },
-                    {
-                        "lightness": -100
-                    },
-                    {
-                        "visibility": "off"
-                    }
-                ]
-            },
-            {
-                "featureType": "poi",
-                "elementType": "all",
-                "stylers": [
-                    {
-                        "hue": "#000000"
-                    },
-                    {
-                        "saturation": -100
-                    },
-                    {
-                        "lightness": -100
-                    },
-                    {
-                        "visibility": "off"
-                    }
-                ]
-            },
-            {
-                "featureType": "administrative",
-                "elementType": "all",
-                "stylers": [
-                    {
-                        "hue": "#000000"
-                    },
-                    {
-                        "saturation": 0
-                    },
-                    {
-                        "lightness": -100
-                    },
-                    {
-                        "visibility": "off"
-                    }
-                ]
-            },
-            {
-                "featureType": "road",
-                "elementType": "labels",
-                "stylers": [
-                    {
-                        "hue": "#ffffff"
-                    },
-                    {
-                        "saturation": -100
-                    },
-                    {
-                        "lightness": 100
-                    },
-                    {
-                        "visibility": "off"
-                    }
-                ]
-            },
-            {
-                "featureType": "water",
-                "elementType": "labels",
-                "stylers": [
-                    {
-                        "hue": "#000000"
-                    },
-                    {
-                        "saturation": -100
-                    },
-                    {
-                        "lightness": -100
-                    },
-                    {
-                        "visibility": "off"
-                    }
-                ]
-            },
-            {
-                "featureType": "road.local",
-                "elementType": "all",
-                "stylers": [
-                    {
-                        "hue": "#ffffff"
-                    },
-                    {
-                        "saturation": -100
-                    },
-                    {
-                        "lightness": 100
-                    },
-                    {
-                        "visibility": "on"
-                    }
-                ]
-            },
-            {
-                "featureType": "water",
-                "elementType": "geometry",
-                "stylers": [
-                    {
-                        "hue": "#ffffff"
-                    },
-                    {
-                        "saturation": -100
-                    },
-                    {
-                        "lightness": 100
-                    },
-                    {
-                        "visibility": "on"
-                    }
-                ]
-            },
-            {
-                "featureType": "transit",
-                "elementType": "labels",
-                "stylers": [
-                    {
-                        "hue": "#000000"
-                    },
-                    {
-                        "saturation": 0
-                    },
-                    {
-                        "lightness": -100
-                    },
-                    {
-                        "visibility": "off"
-                    }
-                ]
-            },
-            {
-                "featureType": "landscape",
-                "elementType": "labels",
-                "stylers": [
-                    {
-                        "hue": "#000000"
-                    },
-                    {
-                        "saturation": -100
-                    },
-                    {
-                        "lightness": -100
-                    },
-                    {
-                        "visibility": "off"
-                    }
-                ]
-            },
-            {
-                "featureType": "road",
-                "elementType": "geometry",
-                "stylers": [
-                    {
-                        "hue": "#bbbbbb"
-                    },
-                    {
-                        "saturation": -100
-                    },
-                    {
-                        "lightness": 26
-                    },
-                    {
-                        "visibility": "on"
-                    }
-                ]
-            },
-            {
-                "featureType": "landscape",
-                "elementType": "geometry",
-                "stylers": [
-                    {
-                        "hue": "#dddddd"
-                    },
-                    {
-                        "saturation": -100
-                    },
-                    {
-                        "lightness": -3
-                    },
-                    {
-                        "visibility": "on"
-                    }
-                ]
-            }
-        ]
+        styles: []
     });
     
     console.log('now you see me');
@@ -247,7 +49,7 @@ function heatUp() {
                 );
             });
             
-            var heatmap = new google.maps.visualization.HeatmapLayer({
+            heatmap = new google.maps.visualization.HeatmapLayer({
                 data: heatMapData,
                 gradient: [
                     'rgba(0, 255, 255, 0)',
@@ -275,10 +77,20 @@ function heatUp() {
         }).fail(function (jqXHR, textStatus, errorThrown) {
             alert('failed to load data');
         });
-        
+             
         console.log('whoa');
     }
+
+    function changeRadius() {
+        var radius = $("#radius").val();
+        heatmap.set('radius', radius);
+    }
     
+    function changeMaxIntensity() {
+        var maxIntensity = $("#maxIntensity").val();
+        heatmap.set('maxIntensity', maxIntensity);
+    }
+
     $(document).ready(function () {
         heatUp();
     });
