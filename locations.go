@@ -172,25 +172,18 @@ func handleSync(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(usr, uss)
 
 	i := 0
-	for uss.SyncedThroughDate < time.Now().AddDate(0, 0, -7).Format("20060102") {
+	for uss.SyncedThroughDate < time.Now().AddDate(0, 0, -7).Format("20060102") && i < 60 {
 		i++
-		if i > 60 {
-			http.Error(w, "synced to much", http.StatusInternalServerError)
-			return
-		}
-
+		
 		ds, err := getDailyStoryline(usr.AccessToken, uss.SyncedThroughDate)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		fmt.Println("DS", ds)
 		bcs := extractBreadcrumbs(ds)
-		fmt.Println("BC", len(bcs))
 
 		err = saveBreadcrumbs(usr.UserID, bcs)
 		if err != nil {
@@ -201,7 +194,6 @@ func handleSync(w http.ResponseWriter, req *http.Request) {
 		syncDt, err := time.Parse("20060102", uss.SyncedThroughDate)
 		syncDt = syncDt.AddDate(0, 0, 1)
 		uss.SyncedThroughDate = syncDt.Format("20060102")
-		fmt.Println("SD", uss.SyncedThroughDate)
 
 		err = saveUserSyncedThroughDate(usr.UserID, uss.SyncedThroughDate)
 		if err != nil {
