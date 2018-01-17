@@ -265,7 +265,7 @@ function heatUp() {
                     'rgba(191, 0, 31, 1)',
                     'rgba(255, 0, 0, 1)'
                 ],
-                maxIntensity: 50,
+                maxIntensity: 15,
                 opacity: 1,
                 radius: 5
             });
