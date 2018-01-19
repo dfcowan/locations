@@ -250,19 +250,34 @@ func saveBreadcrumbs(userID int, breadcrumbs []breadcrumb) error {
 	return nil
 }
 
-func loadCounts(userID int) ([]coordinateCount, error) {
+func loadCounts(userID int, startDate string, endDate string) ([]coordinateCount, error) {
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return []coordinateCount{}, err
 	}
 	defer db.Close()
 
+	var sdp, edp string
+	if startDate == "" {
+		sdp = "00000000-T000000-0000"
+	} else {
+		sdp = startDate + "T000000-0000"
+	}
+	if endDate == "" {
+		edp = "99991231-T000000-0000"
+	} else {
+		edp = endDate + "T115959-0000"
+	}
+
 	rows, err := db.Query(
 		`select bc_lat, bc_lon, count(*)
 		from breadcrumbs
 		where user_id = $1
+		  and bc_time between $2 and $3
 		group by bc_lat, bc_lon`,
-		userID)
+		userID,
+		sdp,
+		edp)
 	if err != nil {
 		return []coordinateCount{}, err
 	}

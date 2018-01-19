@@ -75,12 +75,37 @@ function heatUp() {
             
             console.log('it\'s getting hot in here');
         }).fail(function (jqXHR, textStatus, errorThrown) {
-            alert('failed to load data');
+            alert('failed to load counts');
         });
-             
+        
+        $.ajax({
+            url: '/api/users/' + userId + '/sync'
+        }).done(function (data, textStatus, jqXHR) {
+            console.log(data);
+            var startDate = addHyphens(data.StartDate);
+            var endDate = addHyphens(data.SyncedThroughDate);
+            
+            $("#startDate").val(startDate);
+            $("#startDate").attr("min", startDate);
+            $("#startDate").attr("max", endDate);
+            $("#endDate").val(endDate);
+            $("#endDate").attr("min", startDate);
+            $("#endDate").attr("max", endDate);
+        }).fail(function(){
+            alert('failed to load sync status');
+        });    
+        
         console.log('whoa');
     }
-
+    
+    function addHyphens(d) {
+        return d.substr(0,4) + "-" + d.substr(4,2) + "-" + d.substr(6,2);
+    }
+    
+    function removeHyphen(d) {
+        return d.substr(0,4) + d.substr(5,2) + d.substr(8,2);
+    }
+    
     function changeRadius() {
         var radius = $("#radius").val();
         heatmap.set('radius', radius);
@@ -90,7 +115,37 @@ function heatUp() {
         var maxIntensity = $("#maxIntensity").val();
         heatmap.set('maxIntensity', maxIntensity);
     }
+    
+    function refresh() {
+        var userId = getQuerystringParameterValue("user");
+        var startDate = removeHyphen($("#startDate").val());
+        console.log(startDate);
+        var endDate = removeHyphen($("#endDate").val());
+        console.log(endDate);
 
+        $.ajax({
+            url: '/api/users/' + userId + '/counts?startDate=' + startDate + '&endDate=' + endDate
+        }).done(function (data, textStatus, jqXHR) {
+            console.log('refreshed data');
+            
+            var heatMapData = [];
+            data.forEach(function(cc) {
+                heatMapData.push(
+                    {
+                        location: new google.maps.LatLng(
+                            cc.Coordinate.Lat,
+                            cc.Coordinate.Lon),
+                            weight: cc.Count	
+                    }
+                );
+            });
+
+            heatmap.setData(heatMapData);
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            alert('failed to load counts');
+        });    
+    }
+    
     $(document).ready(function () {
         heatUp();
     });

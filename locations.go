@@ -44,7 +44,8 @@ func main() {
 	r.HandleFunc("/api/authorize", handleAuthorize).Methods("GET")
 	r.HandleFunc("/api/authcodeexchange", handleAuthCodeExchange).Methods("GET")
 	r.HandleFunc("/api/users/{id}/counts", handleCounts).Methods("GET")
-	r.HandleFunc("/api/users/{id}/sync", handleSync).Methods("GET")
+	r.HandleFunc("/api/users/{id}/sync", handleSyncGet).Methods("GET")
+	r.HandleFunc("/api/users/{id}/sync", handleSync).Methods("POST")
 
 	fmt.Println("Starting HTTP server")
 	err = http.ListenAndServe(":"+port, r)
@@ -154,6 +155,33 @@ func getFirstDate(accessToken string) (string, error) {
 	return firstDate, nil
 }
 
+func handleSyncGet(w http.ResponseWriter, req *http.Request) {
+	parmUserID := mux.Vars(req)["id"]
+	if parmUserID == "" {
+		http.Error(w, "user id is required", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.Atoi(parmUserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, uss, err := loadUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = json.NewEncoder(w).Encode(uss)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to serialize response: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
 func handleSync(w http.ResponseWriter, req *http.Request) {
 	parmUserID := mux.Vars(req)["id"]
 	if parmUserID == "" {
@@ -176,7 +204,7 @@ func handleSync(w http.ResponseWriter, req *http.Request) {
 	i := 0
 	for uss.SyncedThroughDate < time.Now().AddDate(0, 0, -7).Format("20060102") && i < 60 {
 		i++
-		
+
 		ds, err := getDailyStoryline(usr.AccessToken, uss.SyncedThroughDate)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -223,7 +251,25 @@ func handleCounts(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	ccs, err := loadCounts(userID)
+	parmStartDate := req.URL.Query().Get("startDate")
+	if parmStartDate != "" {
+		_, err = strconv.Atoi(parmStartDate)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
+	parmEndDate := req.URL.Query().Get("endDate")
+	if parmEndDate != "" {
+		_, err = strconv.Atoi(parmEndDate)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
+	ccs, err := loadCounts(userID, parmStartDate, parmEndDate)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

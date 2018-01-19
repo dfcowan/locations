@@ -51,8 +51,18 @@ func TestSaveBreadcrumbs(t *testing.T) {
 			Time: "20151214",
 		},
 	}
-	
+
 	err := saveBreadcrumbs(id, bcs)
-	
+
 	assert.Nil(t, err)
+}
+
+func TestLoadCounts(t *testing.T) {
+	migrate()
+
+	cnts, err := loadCounts(56200834001288605, "20151216", "20180118")
+
+	require.Nil(t, err)
+
+	assert.NotZero(t, len(cnts))
 }
