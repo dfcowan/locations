@@ -183,6 +183,8 @@ func handleSyncGet(w http.ResponseWriter, req *http.Request) {
 }
 
 func handleSync(w http.ResponseWriter, req *http.Request) {
+	start := time.Now()
+
 	parmUserID := mux.Vars(req)["id"]
 	if parmUserID == "" {
 		http.Error(w, "user id is required", http.StatusBadRequest)
@@ -202,7 +204,10 @@ func handleSync(w http.ResponseWriter, req *http.Request) {
 	}
 
 	i := 0
-	for uss.SyncedThroughDate < time.Now().AddDate(0, 0, -7).Format("20060102") && i < 60 {
+	for uss.SyncedThroughDate < time.Now().AddDate(0, 0, -7).Format("20060102") &&
+		i < 60 &&
+		time.Now().Sub(start).Seconds() < 27 {
+			
 		i++
 
 		ds, err := getDailyStoryline(usr.AccessToken, uss.SyncedThroughDate)

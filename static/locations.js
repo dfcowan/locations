@@ -145,6 +145,28 @@ function heatUp() {
             alert('failed to load counts');
         });    
     }
+
+    function sync() {
+        var userId = getQuerystringParameterValue("user");
+
+        $("#sync").text("Syncing...");
+
+        $.ajax({
+            url: '/api/users/' + userId + '/sync',
+            method: "POST"
+        }).done(function (data, textStatus, jqXHR) {
+            var endDate = addHyphens(data.SyncedThroughDate);
+            
+            $("#startDate").attr("max", endDate);
+            $("#endDate").val(endDate);
+            $("#endDate").attr("max", endDate);
+
+            $("#sync").text("Synced through " + endDate);
+            
+        }).fail(function(){
+            alert('failed to sync');
+        });    
+    }
     
     $(document).ready(function () {
         heatUp();

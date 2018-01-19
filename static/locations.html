@@ -19,7 +19,7 @@
 				To:  <input id="endDate" type="date">
 			</div>
 			<div class="col-12 col-md-4">
-				<button id="refresh" onclick="refresh()">Refresh</button>
+				<button id="refresh" onclick="refresh()">Limit by Date Range</button>
 			</div>
 		</div>
 		<div class="row">
@@ -28,6 +28,11 @@
 			</div>
 			<div class="col-12 col-md-6">
 				Max Intensity: <input id="maxIntensity" type="range" min="1" max="500" value="15" onchange="changeMaxIntensity()">
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-12 col-md-6">
+				<button id="sync" onclick="sync()">Sync with Moves</button>
 			</div>
 		</div>
 		<div class="row">
