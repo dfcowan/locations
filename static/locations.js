@@ -117,6 +117,8 @@ function heatUp() {
     }
     
     function refresh() {
+        $("#refresh").text("Loading...");
+
         var userId = getQuerystringParameterValue("user");
         var startDate = removeHyphen($("#startDate").val());
         console.log(startDate);
@@ -141,6 +143,8 @@ function heatUp() {
             });
 
             heatmap.setData(heatMapData);
+
+            $("#refresh").text("Limit by Date Range");
         }).fail(function (jqXHR, textStatus, errorThrown) {
             alert('failed to load counts');
         });    
