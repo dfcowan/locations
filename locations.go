@@ -37,12 +37,11 @@ func main() {
 
 	r := mux.NewRouter()
 
-	// This will serve files under http://localhost:8000/static/<filename>
+	// This will serve files under http://<site>/static/<filename>
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 
-	r.HandleFunc("/api/hello", handleHello).Methods("GET")
-	r.HandleFunc("/api/authorize", handleAuthorize).Methods("GET")
-	r.HandleFunc("/api/authcodeexchange", handleAuthCodeExchange).Methods("GET")
+	r.HandleFunc("/authorize", handleAuthorize).Methods("GET")
+	r.HandleFunc("/authcodeexchange", handleAuthCodeExchange).Methods("GET")
 	r.HandleFunc("/api/users/{id}/counts", handleCounts).Methods("GET")
 	r.HandleFunc("/api/users/{id}/sync", handleSyncGet).Methods("GET")
 	r.HandleFunc("/api/users/{id}/sync", handleSync).Methods("POST")
@@ -54,10 +53,6 @@ func main() {
 	} else {
 		fmt.Printf("Done\n")
 	}
-}
-
-func handleHello(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprint(w, "Hello, world")
 }
 
 func handleAuthorize(w http.ResponseWriter, req *http.Request) {
@@ -76,30 +71,30 @@ func handleAuthCodeExchange(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "code is a required querystring parameter", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("auth code", code)
 
 	token, err := getAccessToken(code)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		fmt.Println(err)
 		return
 	}
-	fmt.Println("access token", token)
 
 	firstDate, err := getFirstDate(token.AccessToken)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		fmt.Println(err)
 		return
 	}
-	fmt.Println("first date", firstDate)
 
 	err = createUser(token, firstDate)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		fmt.Println(err)
 		return
 	}
+
+	http.Redirect(
+		w,
+		req,
+		fmt.Sprintf("/static/locations.html?user=%v", token.UserID),
+		http.StatusFound)
 }
 
 func getAccessToken(code string) (accessToken, error) {
@@ -112,6 +107,10 @@ func getAccessToken(code string) (accessToken, error) {
 	resp, err := http.Post(url, "", nil)
 	if err != nil {
 		return accessToken{}, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return accessToken{}, fmt.Errorf("error getting access token from moves - %v", resp.StatusCode)
 	}
 
 	defer resp.Body.Close()
@@ -134,7 +133,9 @@ func getFirstDate(accessToken string) (string, error) {
 		return "", err
 	}
 
-	fmt.Println("profile status", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("error getting first date from moves - %v", resp.StatusCode)
+	}
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -207,7 +208,7 @@ func handleSync(w http.ResponseWriter, req *http.Request) {
 	for uss.SyncedThroughDate < time.Now().AddDate(0, 0, -7).Format("20060102") &&
 		i < 60 &&
 		time.Now().Sub(start).Seconds() < 27 {
-			
+
 		i++
 
 		ds, err := getDailyStoryline(usr.AccessToken, uss.SyncedThroughDate)
@@ -294,14 +295,14 @@ func getDailyStoryline(bearerToken string, date string) (dailyStoryline, error) 
 		date,
 		bearerToken)
 
-	fmt.Println(url)
-
 	resp, err := http.Get(url)
 	if err != nil {
 		return dailyStoryline{}, err
 	}
 
-	fmt.Println(resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		return dailyStoryline{}, fmt.Errorf("error getting daily storyline from moves - %v")
+	}
 
 	defer resp.Body.Close()
 	storylines := []dailyStoryline{}
