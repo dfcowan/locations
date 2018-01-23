@@ -205,7 +205,7 @@ func handleSync(w http.ResponseWriter, req *http.Request) {
 	}
 
 	i := 0
-	for uss.SyncedThroughDate < time.Now().AddDate(0, 0, -7).Format("20060102") &&
+	for uss.SyncedThroughDate < time.Now().AddDate(0, 0, -1).Format("20060102") &&
 		i < 60 &&
 		time.Now().Sub(start).Seconds() < 27 {
 
