@@ -266,7 +266,7 @@ func loadCounts(userID int, startDate string, endDate string) ([]coordinateCount
 	if endDate == "" {
 		edp = "99991231-T000000-0000"
 	} else {
-		edp = endDate + "T115959-0000"
+		edp = endDate + "T235959-0000"
 	}
 
 	rows, err := db.Query(
