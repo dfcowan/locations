@@ -14,8 +14,6 @@ var map;
 var heatmap;
 
 function initMap() {
-    console.log('initMap');
-    
     var home = {lat: 29.576679, lng: -98.450644};
     
     map = new google.maps.Map(document.getElementById('map'), {
@@ -23,20 +21,14 @@ function initMap() {
         center: home,
         styles: []
     });
-    
-    console.log('now you see me');
 }
 
 function heatUp() {
-    console.log('heatUp');
-    
     var userId = getQuerystringParameterValue("user");
     
     $.ajax({
         url: '/api/users/' + userId + '/counts'
     }).done(function (data, textStatus, jqXHR) {
-        console.log('loaded data');
-        
         var heatMapData = [];
         data.forEach(function(cc) {
             heatMapData.push(
@@ -72,8 +64,6 @@ function heatUp() {
                 radius: 5
             });
             heatmap.setMap(map);        
-            
-            console.log('it\'s getting hot in here');
         }).fail(function (jqXHR, textStatus, errorThrown) {
             alert('failed to load counts');
         });
@@ -81,21 +71,17 @@ function heatUp() {
         $.ajax({
             url: '/api/users/' + userId + '/sync'
         }).done(function (data, textStatus, jqXHR) {
-            console.log(data);
             var startDate = addHyphens(data.StartDate);
             var endDate = addHyphens(data.SyncedThroughDate);
             
             $("#startDate").val(startDate);
             $("#startDate").attr("min", startDate);
-            $("#startDate").attr("max", endDate);
-            $("#endDate").val(endDate);
             $("#endDate").attr("min", startDate);
-            $("#endDate").attr("max", endDate);
+
+            applyEndDate(endDate);
         }).fail(function(){
             alert('failed to load sync status');
         });    
-        
-        console.log('whoa');
     }
     
     function addHyphens(d) {
@@ -121,15 +107,11 @@ function heatUp() {
 
         var userId = getQuerystringParameterValue("user");
         var startDate = removeHyphen($("#startDate").val());
-        console.log(startDate);
         var endDate = removeHyphen($("#endDate").val());
-        console.log(endDate);
 
         $.ajax({
             url: '/api/users/' + userId + '/counts?startDate=' + startDate + '&endDate=' + endDate
         }).done(function (data, textStatus, jqXHR) {
-            console.log('refreshed data');
-            
             var heatMapData = [];
             data.forEach(function(cc) {
                 heatMapData.push(
@@ -160,18 +142,28 @@ function heatUp() {
             method: "POST"
         }).done(function (data, textStatus, jqXHR) {
             var endDate = addHyphens(data.SyncedThroughDate);
-            
-            $("#startDate").attr("max", endDate);
-            $("#endDate").val(endDate);
-            $("#endDate").attr("max", endDate);
-
+            endDate = applyEndDate(endDate);
             $("#sync").text("Synced through " + endDate);
-            
         }).fail(function(){
             alert('failed to sync');
         });    
     }
-    
+
+    function applyEndDate(endDate) {
+        var dt = new Date(endDate);
+        dt.setDate(dt.getDate() - 1);
+        dt = dt.toISOString().substr(0,10);
+
+        if (!$("#endDate").val() || $("#endDate").val() == $("#endDate").attr("max")) {
+            $("#endDate").val(dt);
+        }
+
+        $("#startDate").attr("max", dt);
+        $("#endDate").attr("max", dt);
+
+        return dt;
+    }
+
     $(document).ready(function () {
         heatUp();
     });
