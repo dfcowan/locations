@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -129,19 +128,12 @@ func createUser(token accessToken, firstDate string) error {
 	}
 	fmt.Println("inserted to users")
 
-	dt, err := time.Parse("20060102", firstDate)
-	if err != nil {
-		return err
-	}
-	dt = dt.AddDate(0, 0, -1)
-	syncedDate := dt.Format("20060102")
-
 	_, err = db.Exec(
 		`INSERT INTO users_sync_status(user_id, uss_start_date, uss_synced_through_date) 
 		values($1, $2, $3)`,
 		token.UserID,
 		firstDate,
-		syncedDate)
+		firstDate)
 	if err != nil {
 		return err
 	}
@@ -210,6 +202,10 @@ func loadUser(userID int) (user, userSyncStatus, error) {
 
 	uss.StartDate = strings.Trim(uss.StartDate, " ")
 	uss.SyncedThroughDate = strings.Trim(uss.SyncedThroughDate, " ")
+
+	if uss.SyncedThroughDate < uss.StartDate {
+		uss.SyncedThroughDate = uss.StartDate
+	}
 
 	return u, uss, nil
 }
