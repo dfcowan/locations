@@ -36,8 +36,22 @@ func migrate() error {
 			_, err := db.Exec(
 				`create table if not exists users (
 					user_id bigint primary key,
-					u_access_token char(64) not null,
-					u_refresh_token char(64) not null
+					u_followMee_key char(64) not null,
+					u_followMee_username char(64) not null,
+					u_followMee_deviceid char(64) not null
+				)`)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println("Created users table")
+		} else if err.Error() == "pq: relation \"users\" does not exist" {
+			fmt.Println("Altering users table")
+			_, err := db.Exec(
+				`create table if not exists users (
+					user_id bigint primary key,
+					u_followMee_key char(64) not null,
+					u_followMee_username char(64) not null,
+					u_followMee_deviceid char(64) not null
 				)`)
 			if err != nil {
 				log.Fatal(err)
@@ -110,7 +124,7 @@ func migrate() error {
 	return nil
 }
 
-func createUser(token accessToken, firstDate string) error {
+func createUser(userID string, followMeeKey string, followMeeUserName string, followMeeDeviceID string, firstDate string) error {
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return err
@@ -118,11 +132,12 @@ func createUser(token accessToken, firstDate string) error {
 	defer db.Close()
 
 	_, err = db.Exec(
-		`INSERT INTO users(user_id, u_access_token, u_refresh_token) 
+		`INSERT INTO users(user_id, u_followMee_key, u_followMee_username, u_followMee_deviceid) 
 		values($1, $2, $3)`,
-		token.UserID,
-		token.AccessToken,
-		token.RefreshToken)
+		userID,
+		followMeeKey,
+		followMeeUserName,
+		followMeeDeviceID)
 	if err != nil {
 		return err
 	}
@@ -131,7 +146,7 @@ func createUser(token accessToken, firstDate string) error {
 	_, err = db.Exec(
 		`INSERT INTO users_sync_status(user_id, uss_start_date, uss_synced_through_date) 
 		values($1, $2, $3)`,
-		token.UserID,
+		userID,
 		firstDate,
 		firstDate)
 	if err != nil {
@@ -171,14 +186,14 @@ func loadUser(userID int) (user, userSyncStatus, error) {
 	defer db.Close()
 
 	row := db.QueryRow(
-		`select user_id, u_access_token, u_refresh_token
+		`select user_id, u_followMee_key, u_followMee_username, u_followMee_deviceid
 		from users
 		where user_id = $1`,
 		userID)
 
 	u := user{}
 
-	err = row.Scan(&u.UserID, &u.AccessToken, &u.RefreshToken)
+	err = row.Scan(&u.UserID, &u.FollowMeeKey, &u.FollowMeeUserName, &u.FollowMeeDeviceID)
 	if err == sql.ErrNoRows {
 		return user{}, userSyncStatus{}, errors.New("user not found")
 	} else if err != nil {

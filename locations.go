@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -39,9 +38,6 @@ func main() {
 
 	// This will serve files under http://<site>/static/<filename>
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
-
-	r.HandleFunc("/authorize", handleAuthorize).Methods("GET")
-	r.HandleFunc("/authcodeexchange", handleAuthCodeExchange).Methods("GET")
 	r.HandleFunc("/api/users/{id}/counts", handleCounts).Methods("GET")
 	r.HandleFunc("/api/users/{id}/sync", handleSyncGet).Methods("GET")
 	r.HandleFunc("/api/users/{id}/sync", handleSync).Methods("POST")
@@ -53,107 +49,6 @@ func main() {
 	} else {
 		fmt.Printf("Done\n")
 	}
-}
-
-func handleAuthorize(w http.ResponseWriter, req *http.Request) {
-	http.Redirect(
-		w,
-		req,
-		fmt.Sprintf(
-			"https://api.moves-app.com/oauth/v1/authorize?response_type=code&client_id=%v&scope=activity location",
-			clientID),
-		http.StatusFound)
-}
-
-func handleAuthCodeExchange(w http.ResponseWriter, req *http.Request) {
-	code := req.URL.Query().Get("code")
-	if code == "" {
-		http.Error(w, "code is a required querystring parameter", http.StatusInternalServerError)
-		return
-	}
-
-	token, err := getAccessToken(code)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	firstDate, err := getFirstDate(token.AccessToken)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = createUser(token, firstDate)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(
-		w,
-		req,
-		fmt.Sprintf("/static/locations.html?user=%v", token.UserID),
-		http.StatusFound)
-}
-
-func getAccessToken(code string) (accessToken, error) {
-	url := fmt.Sprintf(
-		"https://api.moves-app.com/oauth/v1/access_token?grant_type=authorization_code&code=%v&client_id=%v&client_secret=%v",
-		code,
-		clientID,
-		clientSecret)
-
-	resp, err := http.Post(url, "", nil)
-	if err != nil {
-		return accessToken{}, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return accessToken{}, fmt.Errorf("error getting access token from moves - %v", resp.StatusCode)
-	}
-
-	defer resp.Body.Close()
-	token := accessToken{}
-	err = json.NewDecoder(resp.Body).Decode(&token)
-	if err != nil {
-		return accessToken{}, err
-	}
-
-	return token, nil
-}
-
-func getFirstDate(accessToken string) (string, error) {
-	url := fmt.Sprintf(
-		"https://api.moves-app.com/api/1.1/user/profile?access_token=%v",
-		accessToken)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error getting first date from moves - %v", resp.StatusCode)
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	var dat map[string]interface{}
-
-	err = json.Unmarshal(body, &dat)
-	if err != nil {
-		return "", err
-	}
-
-	profile := dat["profile"].(map[string]interface{})
-	firstDate := profile["firstDate"].(string)
-
-	return firstDate, nil
 }
 
 func handleSyncGet(w http.ResponseWriter, req *http.Request) {
@@ -211,7 +106,7 @@ func handleSync(w http.ResponseWriter, req *http.Request) {
 
 		i++
 
-		ds, err := getDailyStoryline(usr.AccessToken, uss.SyncedThroughDate)
+		ds, err := getData(usr.FollowMeeKey, usr.FollowMeeUserName, usr.FollowMeeDeviceID, uss.SyncedThroughDate)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -289,47 +184,46 @@ func handleCounts(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func getDailyStoryline(bearerToken string, date string) (dailyStoryline, error) {
+func getData(followMeeKey string, followMeeUserName string, followMeeDeviceID string, date string) (followMee, error) {
 	url := fmt.Sprintf(
-		"https://api.moves-app.com/api/1.1/user/storyline/daily/%v?trackPoints=true&access_token=%v",
+		"http://www.followmee.com/api/tracks.aspx?key=%v&username=%v&output=json&function=daterangefordevice&from=%v&to=%v&deviceid=%v",
+		followMeeKey,
+		followMeeUserName,
 		date,
-		bearerToken)
+		date,
+		followMeeDeviceID)
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return dailyStoryline{}, err
+		return followMee{}, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return dailyStoryline{}, fmt.Errorf("error getting daily storyline from moves - %v")
+		return followMee{}, fmt.Errorf("error getting data from followMee - %v", resp.StatusCode)
 	}
 
 	defer resp.Body.Close()
-	storylines := []dailyStoryline{}
-	err = json.NewDecoder(resp.Body).Decode(&storylines)
+	data := followMee{}
+	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
-		return dailyStoryline{}, err
+		return followMee{}, err
 	}
 
-	return storylines[0], nil
+	return data, nil
 }
 
-func extractBreadcrumbs(ds dailyStoryline) []breadcrumb {
+func extractBreadcrumbs(data followMee) []breadcrumb {
 	breadcrumbs := []breadcrumb{}
 
-	for _, segment := range ds.Segments {
-		for _, activity := range segment.Activities {
-			for _, trackPoint := range activity.TrackPoints {
-				bc := breadcrumb{
-					Coordinate: coordinate{
-						Lat: trackPoint.Lat,
-						Lon: trackPoint.Lon,
-					},
-					Time: trackPoint.Time,
-				}
-				breadcrumbs = append(breadcrumbs, bc)
-			}
+	for _, trackPoint := range data.Data {
+		bc := breadcrumb{
+			Coordinate: coordinate{
+				Lat: trackPoint.Latitude,
+				Lon: trackPoint.Longitude,
+			},
+			Time: trackPoint.Date,
 		}
+		breadcrumbs = append(breadcrumbs, bc)
 	}
 
 	return breadcrumbs

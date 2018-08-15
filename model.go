@@ -1,9 +1,10 @@
 package main
 
 type user struct {
-	UserID       int
-	AccessToken  string
-	RefreshToken string
+	UserID            int
+	FollowMeeKey      string
+	FollowMeeUserName string
+	FollowMeeDeviceID string
 }
 
 type userSyncStatus struct {
