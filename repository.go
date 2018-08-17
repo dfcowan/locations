@@ -29,30 +29,29 @@ func migrate() error {
 	}
 	defer db.Close()
 
-	_, err = db.Query("SELECT user_id FROM users WHERE user_id = 0")
+	_, err = db.Query("SELECT u_followMee_key FROM users WHERE user_id = 0")
 	if err != nil {
 		if err.Error() == "pq: relation \"users\" does not exist" {
 			fmt.Println("Creating users table")
 			_, err := db.Exec(
 				`create table if not exists users (
 					user_id bigint primary key,
-					u_followMee_key char(64) not null,
-					u_followMee_username char(64) not null,
-					u_followMee_deviceid char(64) not null
+					u_followMee_key char(64) not null default '',
+					u_followMee_username char(64) not null default '',
+					u_followMee_deviceid char(64) not null default ''
 				)`)
 			if err != nil {
 				log.Fatal(err)
 			}
 			fmt.Println("Created users table")
-		} else if err.Error() == "pq: relation \"users\" does not exist" {
+		} else if err.Error() == "pq: column \"u_followmee_key\" does not exist" {
 			fmt.Println("Altering users table")
 			_, err := db.Exec(
-				`create table if not exists users (
-					user_id bigint primary key,
-					u_followMee_key char(64) not null,
-					u_followMee_username char(64) not null,
-					u_followMee_deviceid char(64) not null
-				)`)
+				`alter table users 
+					add column u_followMee_key char(64) not null default '',
+					add column u_followMee_username char(64) not null default '',
+					add column u_followMee_deviceid char(64) not null default ''
+				`)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -199,6 +198,9 @@ func loadUser(userID int) (user, userSyncStatus, error) {
 	} else if err != nil {
 		return user{}, userSyncStatus{}, err
 	}
+	u.FollowMeeKey = strings.Trim(u.FollowMeeKey, " ")
+	u.FollowMeeUserName = strings.Trim(u.FollowMeeUserName, " ")
+	u.FollowMeeDeviceID = strings.Trim(u.FollowMeeDeviceID, " ")
 
 	row = db.QueryRow(
 		`select user_id, uss_start_date, uss_synced_through_date

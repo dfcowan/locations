@@ -12,18 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var (
-	clientSecret string
-)
-
-const clientID = "1YDQsQs35jh33XfAPL8T0KW5fz7jizOZ"
-
 func main() {
-	clientSecret = os.Getenv("MOVESSECRET")
-	if clientSecret == "" {
-		log.Fatal("$MOVESSECRET must be set")
-	}
-
 	var port = os.Getenv("PORT")
 	if port == "" {
 		port = "8632"
@@ -100,7 +89,7 @@ func handleSync(w http.ResponseWriter, req *http.Request) {
 	}
 
 	i := 0
-	for uss.SyncedThroughDate < time.Now().AddDate(0, 0, -2).Format("20060102") &&
+	for uss.SyncedThroughDate < time.Now().Format("20060102") &&
 		i < 60 &&
 		time.Now().Sub(start).Seconds() < 27 {
 
@@ -112,7 +101,11 @@ func handleSync(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		bcs := extractBreadcrumbs(ds)
+		bcs, err := extractBreadcrumbs(ds)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		err = saveBreadcrumbs(usr.UserID, bcs)
 		if err != nil {
@@ -185,12 +178,19 @@ func handleCounts(w http.ResponseWriter, req *http.Request) {
 }
 
 func getData(followMeeKey string, followMeeUserName string, followMeeDeviceID string, date string) (followMee, error) {
+	syncDt, err := time.Parse("20060102", date)
+	if err != nil {
+		return followMee{}, err
+	}
+
+	requestDt := syncDt.Format("2006-01-02")
+
 	url := fmt.Sprintf(
 		"http://www.followmee.com/api/tracks.aspx?key=%v&username=%v&output=json&function=daterangefordevice&from=%v&to=%v&deviceid=%v",
 		followMeeKey,
 		followMeeUserName,
-		date,
-		date,
+		requestDt,
+		requestDt,
 		followMeeDeviceID)
 
 	resp, err := http.Get(url)
@@ -209,22 +209,32 @@ func getData(followMeeKey string, followMeeUserName string, followMeeDeviceID st
 		return followMee{}, err
 	}
 
+	if data.Error != "" {
+		return followMee{}, fmt.Errorf(data.Error)
+	}
+
 	return data, nil
 }
 
-func extractBreadcrumbs(data followMee) []breadcrumb {
+func extractBreadcrumbs(data followMee) ([]breadcrumb, error) {
 	breadcrumbs := []breadcrumb{}
 
 	for _, trackPoint := range data.Data {
+		bcTime, err := time.Parse("2006-01-02T15:04:05-07:00", trackPoint.Date)
+		if err != nil {
+			return []breadcrumb{}, err
+		}
+		bcTimeString := bcTime.Format("20060102T150405-0700")
+
 		bc := breadcrumb{
 			Coordinate: coordinate{
 				Lat: trackPoint.Latitude,
 				Lon: trackPoint.Longitude,
 			},
-			Time: trackPoint.Date,
+			Time: bcTimeString,
 		}
 		breadcrumbs = append(breadcrumbs, bc)
 	}
 
-	return breadcrumbs
+	return breadcrumbs, nil
 }

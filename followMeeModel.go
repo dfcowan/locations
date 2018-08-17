@@ -1,7 +1,8 @@
 package main
 
 type followMee struct {
-	Data []trackPoint `json:"Data"`
+	Data  []trackPoint `json:"Data"`
+	Error string       `json:"Error"`
 }
 
 type trackPoint struct {
