@@ -21,76 +21,69 @@ function initMap() {
         center: home,
         styles: []
     });
+
+    var heatMapData = [];
+    heatmap = new google.maps.visualization.HeatmapLayer({
+        data: heatMapData,
+        gradient: [
+            'rgba(0, 255, 255, 0)',
+            'rgba(0, 255, 255, 1)',
+            'rgba(0, 191, 255, 1)',
+            'rgba(0, 127, 255, 1)',
+            'rgba(0, 63, 255, 1)',
+            'rgba(0, 0, 255, 1)',
+            'rgba(0, 0, 223, 1)',
+            'rgba(0, 0, 191, 1)',
+            'rgba(0, 0, 159, 1)',
+            'rgba(0, 0, 127, 1)',
+            'rgba(63, 0, 91, 1)',
+            'rgba(127, 0, 63, 1)',
+            'rgba(191, 0, 31, 1)',
+            'rgba(255, 0, 0, 1)'
+        ],
+        maxIntensity: 15,
+        opacity: 1,
+        radius: 5
+    });
+    heatmap.setMap(map); 
+
+    heatUp();
 }
 
 function heatUp() {
     var userId = getQuerystringParameterValue("user");
 
     $.ajax({
-        url: '/api/users/' + userId + '/counts'
-    }).done(function (data, textStatus, jqXHR) {
-        var heatMapData = [];
-        var usersCenter = {
-            location: home,
-            weight: 0
-        };
-
-        data.forEach(function(cc) {
-            var l = {
-                location: new google.maps.LatLng(
-                    cc.Coordinate.Lat,
-                    cc.Coordinate.Lon),
-                weight: cc.Count	
-            };
-            heatMapData.push(l);
-            if(l.weight > usersCenter.weight) {
-                usersCenter = l;
-            }
-        });
-
-        map.setCenter(usersCenter.location);
-            
-        heatmap = new google.maps.visualization.HeatmapLayer({
-            data: heatMapData,
-            gradient: [
-                'rgba(0, 255, 255, 0)',
-                'rgba(0, 255, 255, 1)',
-                'rgba(0, 191, 255, 1)',
-                'rgba(0, 127, 255, 1)',
-                'rgba(0, 63, 255, 1)',
-                'rgba(0, 0, 255, 1)',
-                'rgba(0, 0, 223, 1)',
-                'rgba(0, 0, 191, 1)',
-                'rgba(0, 0, 159, 1)',
-                'rgba(0, 0, 127, 1)',
-                'rgba(63, 0, 91, 1)',
-                'rgba(127, 0, 63, 1)',
-                'rgba(191, 0, 31, 1)',
-                'rgba(255, 0, 0, 1)'
-            ],
-            maxIntensity: 15,
-            opacity: 1,
-            radius: 5
-        });
-        heatmap.setMap(map);  
-    }).fail(function (jqXHR, textStatus, errorThrown) {
-        alert('failed to load counts');
-    });
-        
-    $.ajax({
         url: '/api/users/' + userId + '/sync'
     }).done(function (data, textStatus, jqXHR) {
         var startDate = addHyphens(data.StartDate);
         var endDate = addHyphens(data.SyncedThroughDate);
         
-        $("#startDate").val(startDate);
         $("#startDate").attr("min", startDate);
         $("#endDate").attr("min", startDate);
 
-        applyEndDate(endDate);
+        endDate = new Date(endDate);
+        endDate.setDate(endDate.getDate() - 1);
+        endDate = endDate.toISOString().substr(0,10);
+    
+        if (!$("#endDate").val() || $("#endDate").val() == $("#endDate").attr("max")) {
+            $("#endDate").val(endDate);
+        }
+    
+        $("#startDate").attr("max", endDate);
+        $("#endDate").attr("max", endDate);
+        
+        startDate = new Date(endDate)
+        startDate.setDate(startDate.getDate() - 6);
+        startDate = startDate.toISOString().substr(0,10);
+
+        $("#startDate").val(startDate);
+
+        refresh();
     }).fail(function(){
         alert('failed to load sync status');
-    });    
+    });   
+
 }
 
 function addHyphens(d) {
@@ -122,15 +115,15 @@ function refresh() {
         url: '/api/users/' + userId + '/counts?startDate=' + startDate + '&endDate=' + endDate
     }).done(function (data, textStatus, jqXHR) {
         var heatMapData = [];
+        
         data.forEach(function(cc) {
-            heatMapData.push(
-                {
-                    location: new google.maps.LatLng(
-                        cc.Coordinate.Lat,
-                        cc.Coordinate.Lon),
-                        weight: cc.Count	
-                }
-            );
+            var l = {
+                location: new google.maps.LatLng(
+                    cc.Coordinate.Lat,
+                    cc.Coordinate.Lon),
+                weight: cc.Count	
+            };
+            heatMapData.push(l);
         });
 
         heatmap.setData(heatMapData);
@@ -140,39 +133,3 @@ function refresh() {
         alert('failed to load counts');
     });    
 }
-
-function sync() {
-    var userId = getQuerystringParameterValue("user");
-
-    $("#sync").text("Syncing...");
-
-    $.ajax({
-        url: '/api/users/' + userId + '/sync',
-        method: "POST"
-    }).done(function (data, textStatus, jqXHR) {
-        var endDate = addHyphens(data.SyncedThroughDate);
-        endDate = applyEndDate(endDate);
-        $("#sync").text("Synced through " + endDate);
-    }).fail(function(){
-        alert('failed to sync');
-    });    
-}
-
-function applyEndDate(endDate) {
-    var dt = new Date(endDate);
-    dt.setDate(dt.getDate() - 1);
-    dt = dt.toISOString().substr(0,10);
-
-    if (!$("#endDate").val() || $("#endDate").val() == $("#endDate").attr("max")) {
-        $("#endDate").val(dt);
-    }
-
-    $("#startDate").attr("max", dt);
-    $("#endDate").attr("max", dt);
-
-    return dt;
-}
-
-$(document).ready(function () {
-    heatUp();
-});
