@@ -209,7 +209,7 @@ func getData(followMeeKey string, followMeeUserName string, followMeeDeviceID st
 		return followMee{}, err
 	}
 
-	if data.Error != "" {
+	if data.Error != "" && data.Error != "No data returned for your query" {
 		return followMee{}, fmt.Errorf(data.Error)
 	}
 
