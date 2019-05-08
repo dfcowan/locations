@@ -29,6 +29,7 @@ func main() {
 	// This will serve files under http://<site>/static/<filename>
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	r.HandleFunc("/api/users/{id}/counts", handleCounts).Methods("GET")
+	r.HandleFunc("/api/users/{id}/counts", handleCountsDelete).Methods("DELETE")
 	r.HandleFunc("/api/users/{id}/sync", handleSyncGet).Methods("GET")
 	r.HandleFunc("/api/users/{id}/sync", handleSync).Methods("POST")
 	r.HandleFunc("/api/traccar", handleTraccar).Methods("POST")
@@ -190,6 +191,22 @@ func handleTraccar(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	parmAccuracies := req.URL.Query()["accuracy"]
+	if len(parmAccuracies) == 0 {
+		http.Error(w, "accuracy is required", http.StatusBadRequest)
+		return
+	}
+
+	accuracy, err := strconv.ParseFloat(parmAccuracies[0], 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if accuracy < 0 || accuracy > 10 {
+		return
+	}
+
 	usr, uss, err := loadUser(userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -225,8 +242,6 @@ func handleTraccar(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	fmt.Printf("%v\n", uss.SyncedThroughDate)
 }
 
 func roundToFivePlaces(num float64) float64 {
@@ -276,6 +291,26 @@ func handleCounts(w http.ResponseWriter, req *http.Request) {
 	err = json.NewEncoder(w).Encode(ccs)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to serialize response: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
+func handleCountsDelete(w http.ResponseWriter, req *http.Request) {
+	parmUserID := mux.Vars(req)["id"]
+	if parmUserID == "" {
+		http.Error(w, "user id is required", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.Atoi(parmUserID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = deleteBreadCrumbs(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }

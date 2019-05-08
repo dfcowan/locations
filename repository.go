@@ -263,6 +263,31 @@ func saveBreadcrumbs(userID int, breadcrumbs []breadcrumb) error {
 	return nil
 }
 
+func deleteBreadCrumbs(userID int) error {
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	sdp := "2019-05-07T000000-0000"
+	edp := "2019-05-08T235959-0000"
+
+	_, err = db.Exec(
+		`delete
+		from breadcrumbs
+		where user_id = $1
+		  and bc_time between $2 and $3`,
+		userID,
+		sdp,
+		edp)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func loadCounts(userID int, startDate string, endDate string) ([]coordinateCount, error) {
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
