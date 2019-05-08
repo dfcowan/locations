@@ -1,17 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetDailyStoryLine(t *testing.T) {
-	sl, err := getDailyStoryline("access_token", "20151216")
+func TestRound(t *testing.T) {
+	assert.Equal(t, 0.12345, roundToFivePlaces(0.123454))
+	assert.Equal(t, 0.12346, roundToFivePlaces(0.123456))
 
-	assert.Nil(t, err)
-	assert.NotNil(t, sl)
-	assert.True(t, false)
-	fmt.Printf("%+v", sl)
+	assert.Equal(t, -0.12345, roundToFivePlaces(-0.123454))
+	assert.Equal(t, -0.12346, roundToFivePlaces(-0.123456))
 }
