@@ -34,8 +34,6 @@ func main() {
 	r.HandleFunc("/api/users/{id}/sync", handleSync).Methods("POST")
 	r.HandleFunc("/api/traccar", handleTraccar).Methods("POST")
 
-	fmt.Println(time.Now().Unix())
-
 	fmt.Println("Starting HTTP server")
 	err = http.ListenAndServe(":"+port, r)
 	if err != nil {
@@ -193,7 +191,7 @@ func handleTraccar(w http.ResponseWriter, req *http.Request) {
 
 	parmAccuracies := req.URL.Query()["accuracy"]
 	if len(parmAccuracies) == 0 {
-		fmt.Printf("%v missing accuracy", time.Now())
+		fmt.Println("missing accuracy")
 		http.Error(w, "accuracy is required", http.StatusBadRequest)
 		return
 	}
@@ -205,7 +203,7 @@ func handleTraccar(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if accuracy < 0 || accuracy > 10 {
-		fmt.Printf("%v invalid accuracy - %v\v", time.Now(), accuracy)
+		fmt.Println(fmt.Sprintf("invalid accuracy - %v", accuracy))
 		return
 	}
 
