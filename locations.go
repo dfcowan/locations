@@ -29,7 +29,7 @@ func main() {
 	// This will serve files under http://<site>/static/<filename>
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	r.HandleFunc("/api/users/{id}/counts", handleCounts).Methods("GET")
-	r.HandleFunc("/api/users/{id}/counts", handleCountsDelete).Methods("DELETE")
+	//r.HandleFunc("/api/users/{id}/fixup", handleFixup).Methods("POST")
 	r.HandleFunc("/api/users/{id}/sync", handleSyncGet).Methods("GET")
 	r.HandleFunc("/api/users/{id}/sync", handleSync).Methods("POST")
 	r.HandleFunc("/api/traccar", handleTraccar).Methods("POST")
@@ -295,7 +295,7 @@ func handleCounts(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func handleCountsDelete(w http.ResponseWriter, req *http.Request) {
+func handleFixup(w http.ResponseWriter, req *http.Request) {
 	parmUserID := mux.Vars(req)["id"]
 	if parmUserID == "" {
 		http.Error(w, "user id is required", http.StatusBadRequest)
