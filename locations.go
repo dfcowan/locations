@@ -193,6 +193,7 @@ func handleTraccar(w http.ResponseWriter, req *http.Request) {
 
 	parmAccuracies := req.URL.Query()["accuracy"]
 	if len(parmAccuracies) == 0 {
+		fmt.Printf("%v missing accuracy", time.Now())
 		http.Error(w, "accuracy is required", http.StatusBadRequest)
 		return
 	}
@@ -204,6 +205,7 @@ func handleTraccar(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if accuracy < 0 || accuracy > 10 {
+		fmt.Printf("%v invalid accuracy - %v\v", time.Now(), accuracy)
 		return
 	}
 
