@@ -308,7 +308,7 @@ func handleCountsDelete(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = deleteBreadCrumbs(userID)
+	err = saveUserSyncedThroughDate(userID, "20190506")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
