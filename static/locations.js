@@ -63,7 +63,7 @@ function heatUp() {
         $("#endDate").attr("min", startDate);
 
         endDate = new Date(endDate);
-        endDate.setDate(endDate.getDate() - 1);
+        endDate.setDate(endDate.getDate());
         endDate = endDate.toISOString().substr(0,10);
     
         if (!$("#endDate").val() || $("#endDate").val() == $("#endDate").attr("max")) {
