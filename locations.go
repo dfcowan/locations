@@ -136,7 +136,7 @@ func handleTraccar(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if accuracy < 0 || accuracy > 10 {
+	if accuracy < 0 || accuracy > 25 {
 		fmt.Println(fmt.Sprintf("invalid accuracy - %v", accuracy))
 		return
 	}
@@ -150,6 +150,12 @@ func handleTraccar(w http.ResponseWriter, req *http.Request) {
 	breadcrumbs := []breadcrumb{}
 
 	bcTime := time.Unix(timestamp, 0)
+	timeZone, err := time.LoadLocation("America/Chicago")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	bcTime = bcTime.In(timeZone)
 	bcTimeString := bcTime.Format("20060102T150405-0700")
 	fmt.Println(bcTimeString)
 
