@@ -157,7 +157,6 @@ func handleTraccar(w http.ResponseWriter, req *http.Request) {
 	}
 	bcTime = bcTime.In(timeZone)
 	bcTimeString := bcTime.Format("20060102T150405-0700")
-	fmt.Println(bcTimeString)
 
 	bc := breadcrumb{
 		Coordinate: coordinate{
@@ -167,7 +166,6 @@ func handleTraccar(w http.ResponseWriter, req *http.Request) {
 		Time: bcTimeString,
 	}
 	breadcrumbs = append(breadcrumbs, bc)
-	fmt.Println(fmt.Sprintf("%v", breadcrumbs))
 
 	err = saveBreadcrumbs(usr.UserID, breadcrumbs)
 	if err != nil {

@@ -151,6 +151,7 @@ func createUser(userID string, followMeeKey string, followMeeUserName string, fo
 	if err != nil {
 		return err
 	}
+
 	fmt.Println("inserted to users_sync_status")
 
 	return nil
@@ -172,7 +173,8 @@ func saveUserSyncedThroughDate(userID int, syncedThroughDate string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("updated synced through date")
+
+	fmt.Println(fmt.Sprintf("updated synced through date %v", syncedThroughDate))
 
 	return nil
 }
@@ -258,7 +260,7 @@ func saveBreadcrumbs(userID int, breadcrumbs []breadcrumb) error {
 		return err
 	}
 
-	fmt.Println("saved breadcrumbs")
+	fmt.Println(fmt.Sprintf("saved breadcrumbs %v", breadcrumbs))
 
 	return nil
 }
