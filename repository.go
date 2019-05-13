@@ -352,7 +352,7 @@ func loadCounts(userID int, startDate string, endDate string) ([]coordinateCount
 	for rows.Next() {
 		cc := coordinateCount{}
 
-		err = rows.Scan(&cc.Coordinate.Lat, &cc.Coordinate.Lon, &cc.Count)
+		err = rows.Scan(&cc.P.Lat, &cc.P.Lon, &cc.C)
 		if err != nil {
 			return []coordinateCount{}, err
 		}

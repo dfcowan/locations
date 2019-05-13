@@ -119,9 +119,9 @@ function refresh() {
         data.forEach(function(cc) {
             var l = {
                 location: new google.maps.LatLng(
-                    cc.Coordinate.Lat,
-                    cc.Coordinate.Lon),
-                weight: cc.Count	
+                    cc.P.Lat,
+                    cc.P.Lon),
+                weight: cc.C
             };
             heatMapData.push(l);
         });

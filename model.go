@@ -24,8 +24,8 @@ type coordinate struct {
 }
 
 type coordinateCount struct {
-	Coordinate coordinate
-	Count      int
+	P coordinate
+	C int
 }
 
 type status struct {
