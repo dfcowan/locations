@@ -32,6 +32,7 @@ func main() {
 	//r.HandleFunc("/api/users/{id}/fixup", handleFixup).Methods("POST")
 	r.HandleFunc("/api/users/{id}/sync", handleSyncGet).Methods("GET")
 	r.HandleFunc("/api/traccar", handleTraccar).Methods("POST")
+	r.HandleFunc("/meta/status", handleStatusGet).Methods("GET")
 
 	fmt.Println("Starting HTTP server")
 	err = http.ListenAndServe(":"+port, r)
@@ -39,6 +40,21 @@ func main() {
 		log.Fatalf("Cannot listen and serve, %v", err)
 	} else {
 		fmt.Printf("Done\n")
+	}
+}
+
+func handleStatusGet(w http.ResponseWriter, req *http.Request) {
+	s, err := loadStatus()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	err = json.NewEncoder(w).Encode(s)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to serialize response: %v", err), http.StatusInternalServerError)
+		return
 	}
 }
 

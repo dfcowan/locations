@@ -27,3 +27,8 @@ type coordinateCount struct {
 	Coordinate coordinate
 	Count      int
 }
+
+type status struct {
+	UserCount       int
+	BreadcrumbCount int
+}

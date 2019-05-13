@@ -123,6 +123,30 @@ func migrate() error {
 	return nil
 }
 
+func loadStatus() (status, error) {
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return status{}, err
+	}
+	defer db.Close()
+
+	s := status{}
+
+	row := db.QueryRow("select count(*) from users")
+	err = row.Scan(&s.UserCount)
+	if err != nil {
+		return status{}, err
+	}
+
+	row = db.QueryRow("select count(*) from breadcrumbs")
+	err = row.Scan(&s.BreadcrumbCount)
+	if err != nil {
+		return status{}, err
+	}
+
+	return s, nil
+}
+
 func createUser(userID string, followMeeKey string, followMeeUserName string, followMeeDeviceID string, firstDate string) error {
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
