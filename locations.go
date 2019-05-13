@@ -136,7 +136,7 @@ func handleTraccar(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if accuracy < 0 || accuracy > 25 {
+	if accuracy < 0 || accuracy > 75 {
 		fmt.Println(fmt.Sprintf("invalid accuracy - %v", accuracy))
 		return
 	}
