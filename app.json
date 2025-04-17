@@ -1,0 +1,10 @@
+{
+    "name": "Locations",
+    "description": "A heatmap of where you've been",
+    "repository": "https://github.com/dfcowan/locations",
+    "website": "https://obscure-reaches-37656.herokuapp.com/locations.html",
+    "keywords": [
+        "dotnet",
+        "aspnetcore"
+    ]
+}

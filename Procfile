@@ -1,1 +1,1 @@
-web: locations
+web: cd bin/publish/; ./locations --urls http://*:$PORT
