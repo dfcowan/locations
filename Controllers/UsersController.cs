@@ -34,6 +34,8 @@ public class UsersController(LocationsContext context) : ControllerBase
 
         DateTimeOffset startTime = new(startDate.Value, tz.GetUtcOffset(startDate.Value));
         startTime = startTime.ToUniversalTime();
+
+        endDate = endDate.Value.Add(new TimeSpan(23, 59, 59));
         DateTimeOffset endTime = new(endDate.Value, tz.GetUtcOffset(endDate.Value));
         endTime = endTime.ToUniversalTime();
 
