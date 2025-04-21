@@ -55,7 +55,7 @@ public class TraccarController(LocationsContext context) : ControllerBase
 
         if (time > now.AddHours(1))
         {
-            return BadRequest($"time is too far in the future - {time}");
+            Console.WriteLine($"time is too far in the future - {time}");
             return BadRequest($"time is too far in the future - {time}");
         }
 
