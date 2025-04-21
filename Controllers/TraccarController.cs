@@ -20,36 +20,42 @@ public class TraccarController(LocationsContext context) : ControllerBase
     {
         if (id == null)
         {
+            Console.WriteLine("id is required");
             return BadRequest("id is required");
         }
         if (lat == null)
         {
+            Console.WriteLine("lat is required");
             return BadRequest("lat is required");
         }
         if (lon == null)
         {
+            Console.WriteLine("lon is required");
             return BadRequest("lon is required");
         }
         if (timestamp == null)
         {
+            Console.WriteLine("timestamp is required");
             return BadRequest("timestamp is required");
         }
         if (accuracy == null)
         {
+            Console.WriteLine("accuracy is required");
             return BadRequest("accuracy is required");
         }
 
         if (accuracy < 0 || accuracy > 75)
         {
+            Console.WriteLine($"accuracy is invalid - {accuracy}");
             return BadRequest($"accuracy is invalid - {accuracy}");
         }
 
         DateTimeOffset now = DateTimeOffset.UtcNow;
-        Console.WriteLine(now.ToUnixTimeSeconds());
         DateTimeOffset time = DateTimeOffset.FromUnixTimeSeconds(timestamp.Value);
 
         if (time > now.AddHours(1))
         {
+            return BadRequest($"time is too far in the future - {time}");
             return BadRequest($"time is too far in the future - {time}");
         }
 
@@ -57,6 +63,7 @@ public class TraccarController(LocationsContext context) : ControllerBase
         User? user = await _context.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
         if (user == null)
         {
+            Console.WriteLine($"user {userId} not found");
             return NotFound($"user {userId} not found");
         }
 
