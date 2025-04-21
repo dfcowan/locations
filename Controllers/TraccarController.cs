@@ -43,13 +43,14 @@ public class TraccarController(LocationsContext context) : ControllerBase
             Console.WriteLine("accuracy is required");
             return BadRequest("accuracy is required");
         }
-
         if (accuracy < 0 || accuracy > 75)
         {
             Console.WriteLine($"accuracy is invalid - {accuracy}");
             return BadRequest($"accuracy is invalid - {accuracy}");
         }
 
+        lat = Math.Round(lat.Value, 5);
+        lon = Math.Round(lon.Value, 5);
         DateTimeOffset now = DateTimeOffset.UtcNow;
         DateTimeOffset time = DateTimeOffset.FromUnixTimeSeconds(timestamp.Value);
 

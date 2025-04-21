@@ -45,7 +45,7 @@ function initMap() {
         opacity: 1,
         radius: 5
     });
-    heatmap.setMap(map); 
+    heatmap.setMap(map);
 
     heatUp();
 }
@@ -56,23 +56,23 @@ function heatUp() {
     $.ajax({
         url: '/api/users/' + userId + '/sync'
     }).done(function (data, textStatus, jqXHR) {
-        var startDate = addHyphens(data.StartDate);
-        var endDate = addHyphens(data.SyncedThroughDate);
-        
+        var startDate = data.startDate;
+        var endDate = data.syncedThroughDate;
+
         $("#startDate").attr("min", startDate);
         $("#endDate").attr("min", startDate);
 
         endDate = new Date(endDate);
         endDate.setDate(endDate.getDate());
         endDate = endDate.toISOString().substr(0,10);
-    
+
         if (!$("#endDate").val() || $("#endDate").val() == $("#endDate").attr("max")) {
             $("#endDate").val(endDate);
         }
-    
+
         $("#startDate").attr("max", endDate);
         $("#endDate").attr("max", endDate);
-        
+
         startDate = new Date(endDate)
         startDate.setDate(startDate.getDate() - 6);
         startDate = startDate.toISOString().substr(0,10);
@@ -82,16 +82,7 @@ function heatUp() {
         refresh();
     }).fail(function(){
         alert('failed to load sync status');
-    });   
-
-}
-
-function addHyphens(d) {
-    return d.substr(0,4) + "-" + d.substr(4,2) + "-" + d.substr(6,2);
-}
-
-function removeHyphen(d) {
-    return d.substr(0,4) + d.substr(5,2) + d.substr(8,2);
+    });
 }
 
 function changeRadius() {
@@ -108,20 +99,20 @@ function refresh() {
     $("#refresh").text("Loading...");
 
     var userId = getQuerystringParameterValue("user");
-    var startDate = removeHyphen($("#startDate").val());
-    var endDate = removeHyphen($("#endDate").val());
+    var startDate = $("#startDate").val();
+    var endDate = $("#endDate").val();
 
     $.ajax({
         url: '/api/users/' + userId + '/counts?startDate=' + startDate + '&endDate=' + endDate
     }).done(function (data, textStatus, jqXHR) {
         var heatMapData = [];
-        
+
         data.forEach(function(cc) {
             var l = {
                 location: new google.maps.LatLng(
-                    cc.P.Lat,
-                    cc.P.Lon),
-                weight: cc.C
+                    cc.latitude,
+                    cc.longitude),
+                weight: cc.count
             };
             heatMapData.push(l);
         });
@@ -131,5 +122,5 @@ function refresh() {
         $("#refresh").text("Limit by Date Range");
     }).fail(function (jqXHR, textStatus, errorThrown) {
         alert('failed to load counts');
-    });    
+    });
 }
