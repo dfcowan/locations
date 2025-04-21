@@ -15,7 +15,7 @@ public class TraccarController(LocationsContext context) : ControllerBase
         [FromQuery] double? lat,
         [FromQuery] double? lon,
         [FromQuery] long? timestamp,
-        [FromQuery] long? accuracy
+        [FromQuery] double? accuracy
         )
     {
         if (id == null)
