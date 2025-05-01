@@ -85,6 +85,101 @@ function heatUp() {
     });
 }
 
+function changeDateRangeToday() {
+    let today = new Date().toISOString().substr(0,10);
+
+    $("#endDate").attr("max", today);
+    $("#endDate").val(today);
+
+    $("#startDate").val(today);
+
+    refresh();
+}
+
+function changeDateRangeThisWeek() {
+    let today = new Date();
+
+    $("#endDate").attr("max", today.toISOString().substr(0,10));
+    $("#endDate").val(today.toISOString().substr(0,10));
+
+    let startDate = today
+    startDate.setDate(startDate.getDate() - startDate.getDay());
+
+    $("#startDate").val(startDate.toISOString().substr(0, 10));
+
+    refresh();
+}
+
+function changeDateRangeThisMonth() {
+    let today = new Date();
+
+    $("#endDate").attr("max", today.toISOString().substr(0,10));
+    $("#endDate").val(today.toISOString().substr(0,10));
+
+    let startDate = today
+    startDate.setDate(1);
+
+    $("#startDate").val(startDate.toISOString().substr(0, 10));
+
+    refresh();
+}
+
+function changeDateRangeThisYear() {
+    let today = new Date();
+
+    $("#endDate").attr("max", today.toISOString().substr(0,10));
+    $("#endDate").val(today.toISOString().substr(0,10));
+
+    let startDate = today
+    startDate.setMonth(0, 1);
+
+    $("#startDate").val(startDate.toISOString().substr(0, 10));
+
+    refresh();
+}
+
+function changeDateRangeLast7() {
+    let today = new Date();
+
+    $("#endDate").attr("max", today.toISOString().substr(0,10));
+    $("#endDate").val(today.toISOString().substr(0,10));
+
+    let startDate = today
+    startDate.setDate(startDate.getDate() - 6);
+
+    $("#startDate").val(startDate.toISOString().substr(0, 10));
+
+    refresh();
+}
+
+function changeDateRangeLast30() {
+    let today = new Date();
+
+    $("#endDate").attr("max", today.toISOString().substr(0,10));
+    $("#endDate").val(today.toISOString().substr(0,10));
+
+    let startDate = today
+    startDate.setDate(startDate.getDate() - 29);
+
+    $("#startDate").val(startDate.toISOString().substr(0, 10));
+
+    refresh();
+}
+
+function changeDateRangeLast365() {
+    let today = new Date();
+
+    $("#endDate").attr("max", today.toISOString().substr(0,10));
+    $("#endDate").val(today.toISOString().substr(0,10));
+
+    let startDate = today
+    startDate.setDate(startDate.getDate() - 364);
+
+    $("#startDate").val(startDate.toISOString().substr(0, 10));
+
+    refresh();
+}
+
 function changeRadius() {
     var radius = $("#radius").val();
     heatmap.set('radius', radius);

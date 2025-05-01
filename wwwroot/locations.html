@@ -1,4 +1,5 @@
 <html>
+
 <head>
 	<title>Locations - A heatmap of where you've been</title>
 	<meta name="viewport" content="width=device-width">
@@ -8,70 +9,97 @@
 			height: 800px;
 		}
 	</style>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css"
+		integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
 </head>
+
 <body>
 	<div class="container mt-3">
 		<div class="row">
 			<div class="col-12">
 				<h1>Locations</h1>
-					<h4 class="text-muted">A heatmap of where you've been</h4>
+				<h4 class="text-muted">A heatmap of where you've been</h4>
 				</h1>
-				</div>
-			</div>
-			<br>
-			<div class="row">
-				<div class="col-lg-4">
-					<hr class="d-lg-none">
-					<div class="form-group row">
-						<label for="startDate" class="col-2 col-lg-2 col-form-label">From:</label>
-						<div class="col">
-							<input id="startDate" type="date">
-						</div>
-					</div>
-					<div class="form-group row">
-						<label for="endDate" class="col-2 col-lg-2 col-form-label">To:</label>
-						<div class="col">
-							<input id="endDate" type="date">
-						</div>
-					</div>
-					<div class="form-group row">
-						<div class="col-2 col-lg-2">
-						</div>
-						<div class="col">
-							<button id="refresh" onclick="refresh()">Limit by Date Range</button>
-						</div>
-					</div>
-				</div>
-				<div class="col-lg-4">
-					<hr class="d-lg-none">
-					<div class="form-group row">
-						<label for="radius" class="col-5 col-form-label">Radius:</label>
-						<div class="col">
-							<input id="radius" type="range" min="1" max="10" value="5" onchange="changeRadius()">
-						</div>
-					</div>
-					<div class="form-group row">
-						<label for="maxIntensity" class="col-5 col-form-label">Max Intensity:</label>
-						<div class="col">
-							<input id="maxIntensity" type="range" min="1" max="500" value="15" onchange="changeMaxIntensity()">
-						</div>
-					</div>
-				</div>
-			</div>
-			<br>
-			<div class="row">
-				<div id="map"></div>
-			</div>
-			<div class="row mt-5">
-				
 			</div>
 		</div>
-		
-		<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
-		<script type="text/javascript" src="locations.js"></script>
-		<script type="text/javascript" async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD7RdD2-FtODOaLL9c6lAa18sx4fmXbPtY&callback=initMap&libraries=visualization"></script>
-	</body>
-	</html>
+		<br>
+		<div class="row">
+			<div class="col-lg-4">
+				<hr class="d-lg-none">
+				<div class="form-group row">
+					<label for="startDate" class="col-2 col-lg-2 col-form-label">From:</label>
+					<div class="col">
+						<input id="startDate" type="date">
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="endDate" class="col-2 col-lg-2 col-form-label">To:</label>
+					<div class="col">
+						<input id="endDate" type="date">
+					</div>
+				</div>
+				<div class="form-group row">
+					<div class="col-2 col-lg-2">
+					</div>
+					<div class="col">
+						<button id="refresh" onclick="refresh()">Limit by Date Range</button>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-4">
+				<hr class="d-lg-none">
+				<div class="row">
+					<div class="col"><a href="#" onclick="changeDateRangeToday()">Today</a></div>
+				</div>
+				<div class="row">
+					<div class="col"><a href="#" onclick="changeDateRangeThisWeek()">This Week</a></div>
+					<div class="col"><a href="#" onclick="changeDateRangeLast7()">Last 7 Days</a></div>
+				</div>
+				<div class="row">
+					<div class="col"><a href="#" onclick="changeDateRangeThisMonth()">This Month</a></div>
+					<div class="col"><a href="#" onclick="changeDateRangeLast30()">Last 30 Days</a></div>
+				</div>
+				<div class="row">
+					<div class="col"><a href="#" onclick="changeDateRangeThisYear()">This Year</a></div>
+					<div class="col"><a href="#" onclick="changeDateRangeLast365()">Last 365 Days</a></div>
+				</div>
+			</div>
+			<div class="col-lg-4">
+				<hr class="d-lg-none">
+				<div class="form-group row">
+					<label for="radius" class="col-5 col-form-label">Radius:</label>
+					<div class="col">
+						<input id="radius" type="range" min="1" max="10" value="5" onchange="changeRadius()">
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="maxIntensity" class="col-5 col-form-label">Max Intensity:</label>
+					<div class="col">
+						<input id="maxIntensity" type="range" min="1" max="500" value="15"
+							onchange="changeMaxIntensity()">
+					</div>
+				</div>
+			</div>
+		</div>
+		<br>
+		<div class="row">
+			<div id="map"></div>
+		</div>
+		<div class="row mt-5">
+
+		</div>
+	</div>
+
+	<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+		integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+		crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js"
+		integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4"
+		crossorigin="anonymous"></script>
+	<script type="text/javascript" src="locations.js"></script>
+	<script type="text/javascript" async defer
+		src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD7RdD2-FtODOaLL9c6lAa18sx4fmXbPtY&loading=async&callback=initMap&libraries=visualization"></script>
+</body>
+
+</html>
