@@ -63,8 +63,8 @@ public class OsmAndRequestLocation(
 }
 
 public class OsmAndRequestCoords(
-    int heading,
-    int speed,
+    double heading,
+    double speed,
     double latitude,
     double longitude,
     double accuracy,
@@ -72,11 +72,11 @@ public class OsmAndRequestCoords(
 {
     [Required] // Mark as required
     [JsonPropertyName("heading")]
-    public int Heading { get; set; } = heading;
+    public double Heading { get; set; } = heading;
 
     [Required] // Mark as required
     [JsonPropertyName("speed")]
-    public int Speed { get; set; } = speed;
+    public double Speed { get; set; } = speed;
 
     [Required] // Mark as required
     [JsonPropertyName("latitude")]
