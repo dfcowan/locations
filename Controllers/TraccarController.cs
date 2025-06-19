@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,14 +11,17 @@ public class TraccarController(LocationsContext context) : ControllerBase
     private readonly LocationsContext _context = context;
 
     [HttpPost]
-    public async Task<IActionResult> PostBreadcrumbAsync(
-        [FromQuery] long? id,
-        [FromQuery] double? lat,
-        [FromQuery] double? lon,
-        [FromQuery] long? timestamp,
-        [FromQuery] double? accuracy
-        )
+    public async Task<IActionResult> PostBreadcrumbAsync([FromBody] JsonElement jsonElement)
     {
+        Console.WriteLine($"Body - {JsonSerializer.Serialize(jsonElement)}");
+        Console.WriteLine($"QueryString - {HttpContext.Request.QueryString}");
+
+        long? id = null;
+        double? lat = null;
+        double? lon = null;
+        long? timestamp = null;
+        double? accuracy = null;
+
         if (id == null)
         {
             Console.WriteLine("id is required");
