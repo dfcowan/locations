@@ -11,52 +11,23 @@ public class TraccarController(LocationsContext context) : ControllerBase
     private readonly LocationsContext _context = context;
 
     [HttpPost]
-    public async Task<IActionResult> PostBreadcrumbAsync([FromBody] JsonElement jsonElement)
+    public async Task<IActionResult> PostBreadcrumbAsync([FromBody] OsmAndRequest osmAndRequest)
     {
-        Console.WriteLine($"Body - {JsonSerializer.Serialize(jsonElement)}");
-        Console.WriteLine($"QueryString - {HttpContext.Request.QueryString}");
+        long id = long.Parse(osmAndRequest.DeviceId);
+        double lat = osmAndRequest.Location.Coords.Latitude;
+        double lon = osmAndRequest.Location.Coords.Longitude;
+        double accuracy = osmAndRequest.Location.Coords.Accuracy;
 
-        long? id = null;
-        double? lat = null;
-        double? lon = null;
-        long? timestamp = null;
-        double? accuracy = null;
-
-        if (id == null)
-        {
-            Console.WriteLine("id is required");
-            return BadRequest("id is required");
-        }
-        if (lat == null)
-        {
-            Console.WriteLine("lat is required");
-            return BadRequest("lat is required");
-        }
-        if (lon == null)
-        {
-            Console.WriteLine("lon is required");
-            return BadRequest("lon is required");
-        }
-        if (timestamp == null)
-        {
-            Console.WriteLine("timestamp is required");
-            return BadRequest("timestamp is required");
-        }
-        if (accuracy == null)
-        {
-            Console.WriteLine("accuracy is required");
-            return BadRequest("accuracy is required");
-        }
         if (accuracy < 0 || accuracy > 75)
         {
             Console.WriteLine($"accuracy is invalid - {accuracy}");
             return BadRequest($"accuracy is invalid - {accuracy}");
         }
 
-        lat = Math.Round(lat.Value, 5);
-        lon = Math.Round(lon.Value, 5);
+        lat = Math.Round(lat, 5);
+        lon = Math.Round(lon, 5);
         DateTimeOffset now = DateTimeOffset.UtcNow;
-        DateTimeOffset time = DateTimeOffset.FromUnixTimeSeconds(timestamp.Value);
+        var time = new DateTimeOffset(osmAndRequest.Location.Timestamp, TimeSpan.Zero);
 
         if (time > now.AddHours(1))
         {
@@ -64,7 +35,7 @@ public class TraccarController(LocationsContext context) : ControllerBase
             return BadRequest($"time is too far in the future - {time}");
         }
 
-        long userId = id.Value;
+        long userId = id;
         User? user = await _context.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
         if (user == null)
         {
@@ -75,8 +46,8 @@ public class TraccarController(LocationsContext context) : ControllerBase
         Breadcrumb breadcrumb = new(
             id: Guid.NewGuid(),
             userId: userId,
-            latitude: lat.Value,
-            longitude: lon.Value,
+            latitude: lat,
+            longitude: lon,
             time: time);
         _context.Breadcrumbs.Add(breadcrumb);
 
