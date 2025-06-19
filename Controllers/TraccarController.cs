@@ -11,8 +11,24 @@ public class TraccarController(LocationsContext context) : ControllerBase
     private readonly LocationsContext _context = context;
 
     [HttpPost]
-    public async Task<IActionResult> PostBreadcrumbAsync([FromBody] OsmAndRequest osmAndRequest)
+    public async Task<IActionResult> PostBreadcrumbAsync([FromBody] JsonElement jsonElement)
     {
+        OsmAndRequest? osmAndRequest = null;
+        try
+        {
+            osmAndRequest = JsonSerializer.Deserialize<OsmAndRequest>(jsonElement);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception - {ex.Message} at {ex.StackTrace} while parsing {JsonSerializer.Serialize(jsonElement)}");
+            return BadRequest("Couldn't deserialize input JSON");
+        }
+
+        if (osmAndRequest == null)
+        {
+            return BadRequest("Couldn't deserialize input JSON. Null...");
+        }
+
         long id = long.Parse(osmAndRequest.DeviceId);
         double lat = osmAndRequest.Location.Coords.Latitude;
         double lon = osmAndRequest.Location.Coords.Longitude;
