@@ -42,13 +42,13 @@ public class TraccarController(LocationsContext context) : ControllerBase
         {
             Console.WriteLine($"accuracy is invalid - {accuracy} {id} {lat} {lon} {time}");
             Console.WriteLine(JsonSerializer.Serialize(jsonElement));
-            return BadRequest($"accuracy is invalid - {accuracy}");
+            return Ok($"accuracy is invalid - {accuracy}");
         }
 
         if (time > now.AddHours(1))
         {
             Console.WriteLine($"time is too far in the future - {time}");
-            return BadRequest($"time is too far in the future - {time}");
+            return Ok($"time is too far in the future - {time}");
         }
 
         long userId = id;
