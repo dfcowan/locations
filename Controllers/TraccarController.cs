@@ -41,6 +41,7 @@ public class TraccarController(LocationsContext context) : ControllerBase
         if (accuracy < 0 || accuracy > 77.55)
         {
             Console.WriteLine($"accuracy is invalid - {accuracy} {id} {lat} {lon} {time}");
+            Console.WriteLine(JsonSerializer.Serialize(jsonElement));
             return BadRequest($"accuracy is invalid - {accuracy}");
         }
 
