@@ -32,18 +32,17 @@ public class TraccarController(LocationsContext context) : ControllerBase
         long id = long.Parse(osmAndRequest.DeviceId);
         double lat = osmAndRequest.Location.Coords.Latitude;
         double lon = osmAndRequest.Location.Coords.Longitude;
-        double accuracy = osmAndRequest.Location.Coords.Accuracy;
-
-        if (accuracy < 0 || accuracy > 77.55)
-        {
-            Console.WriteLine($"accuracy is invalid - {accuracy}");
-            return BadRequest($"accuracy is invalid - {accuracy}");
-        }
-
         lat = Math.Round(lat, 5);
         lon = Math.Round(lon, 5);
         DateTimeOffset now = DateTimeOffset.UtcNow;
         var time = new DateTimeOffset(osmAndRequest.Location.Timestamp, TimeSpan.Zero);
+        double accuracy = osmAndRequest.Location.Coords.Accuracy;
+
+        if (accuracy < 0 || accuracy > 77.55)
+        {
+            Console.WriteLine($"accuracy is invalid - {accuracy} {id} {lat} {lon} {time}");
+            return BadRequest($"accuracy is invalid - {accuracy}");
+        }
 
         if (time > now.AddHours(1))
         {
