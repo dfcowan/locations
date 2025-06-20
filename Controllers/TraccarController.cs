@@ -34,7 +34,7 @@ public class TraccarController(LocationsContext context) : ControllerBase
         double lon = osmAndRequest.Location.Coords.Longitude;
         double accuracy = osmAndRequest.Location.Coords.Accuracy;
 
-        if (accuracy < 0 || accuracy > 75)
+        if (accuracy < 0 || accuracy > 77.55)
         {
             Console.WriteLine($"accuracy is invalid - {accuracy}");
             return BadRequest($"accuracy is invalid - {accuracy}");
